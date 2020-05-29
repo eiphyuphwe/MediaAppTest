@@ -2,7 +2,10 @@ package eh.com.mediaapptest.ui;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,8 +24,10 @@ import eh.com.mediaapptest.R;
 import eh.com.mediaapptest.ui.adapters.SongAdapter;
 import eh.com.musicsdk.data.Music;
 import eh.com.musicsdk.providers.MusicProviders;
+import eh.com.musicsdk.services.ServiceProviders;
+import eh.com.musicsdk.utils.MyConstants;
 
-public class MainActivity extends AppCompatActivity implements Playable{
+public class MainActivity extends AppCompatActivity{
 
     private int currentIndex;
     boolean isPlaying = false;
@@ -32,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements Playable{
     private TextView tvTitle,tvArtist,tvAlbum;
     private ArrayList<Music> songList;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
+    String path = "";
+    androidx.appcompat.widget.Toolbar toolbar;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -51,6 +58,17 @@ public class MainActivity extends AppCompatActivity implements Playable{
             @Override
             public void onClickListener (Music song, int position) {
 
+                toolbar.setVisibility ( View.VISIBLE );
+                if(!path.equalsIgnoreCase ( "" ))
+                {
+                    if(!path.equalsIgnoreCase ( song.getFilePath () ))
+                    {
+                        // not same song
+                        resetPlayer ();
+
+                    }
+                }
+
                 changeSelectedSong ( position );
                 showPlaySong ( song );
 
@@ -59,12 +77,33 @@ public class MainActivity extends AppCompatActivity implements Playable{
 
         rcySongs.setAdapter (songAdapter);
 
+        catchEvents ();
+        IntentFilter notiIntentFilter = new IntentFilter ( MyConstants.MUSIC_NOTI_FILTER);
+        registerReceiver (broadcastReceiver,notiIntentFilter);
 
+    }
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver () {
+        @Override
+        public void onReceive (Context context, Intent intent) {
+
+            if(intent.getAction ().equals ( MyConstants.MUSIC_NOTI_FILTER ))
+            {
+                toolbar.setVisibility (View.INVISIBLE);
+            }
+        }
+    };
+    private void resetPlayer()
+    {
+        isPlaying = false;
+        iv_play.setImageResource ( R.drawable.ic_play_circle_outline_black_24dp );
+        ServiceProviders.stopMusic ( getApplicationContext () );
     }
 
     private void changeSelectedSong(int index){
         songAdapter.notifyItemChanged(songAdapter.getSelectedPosition());
         currentIndex = index;
+        songAdapter.setInitSelect ( true );
         songAdapter.setSelectedPosition(currentIndex);
         songAdapter.notifyItemChanged(currentIndex);
 
@@ -75,6 +114,8 @@ public class MainActivity extends AppCompatActivity implements Playable{
         tvTitle.setText ( music.getName ()+"" );
         tvAlbum.setText ( music.getAlbum ()+"" );
         tvArtist.setText ( music.getArtist () );
+        path = music.getFilePath ();
+
 
     }
 
@@ -84,6 +125,30 @@ public class MainActivity extends AppCompatActivity implements Playable{
         iv_play.setOnClickListener ( new View.OnClickListener () {
             @Override
             public void onClick (View v) {
+                if(!isPlaying) {
+                    if(!path.equalsIgnoreCase ( "" )) {
+                        iv_play.setImageResource ( R.drawable.ic_pause_circle_outline_black_24dp );
+                        ServiceProviders.playMusic ( getApplicationContext (), tvTitle.getText ().toString (),tvArtist.getText ().toString (),path );
+                        isPlaying = true;
+                    }
+                }
+                else {
+
+                    ServiceProviders.pauseMusic ( MainActivity.this);
+                    resetPlayButton ();
+
+                }
+
+            }
+        } );
+
+        iv_stop.setOnClickListener ( new View.OnClickListener () {
+            @Override
+            public void onClick (View v) {
+
+                ServiceProviders.stopMusic ( MainActivity.this );
+                resetPlayButton ();
+
 
             }
         } );
@@ -91,7 +156,11 @@ public class MainActivity extends AppCompatActivity implements Playable{
 
 
 
-
+    private void resetPlayButton()
+    {
+        iv_play.setImageResource ( R.drawable.ic_play_circle_outline_white );
+        isPlaying = false;
+    }
 
 
     private void declare()
@@ -103,6 +172,8 @@ public class MainActivity extends AppCompatActivity implements Playable{
         tvTitle = (TextView)findViewById ( R.id.tb_title );
         tvAlbum = (TextView) findViewById ( R.id.tb_album );
         tvArtist = (TextView) findViewById ( R.id.tb_artist );
+        toolbar = (androidx.appcompat.widget.Toolbar)findViewById ( R.id.toolbar );
+        toolbar.setVisibility ( View.INVISIBLE );
         rcySongs.setLayoutManager(new LinearLayoutManager (getApplicationContext()));
 
     }
@@ -158,19 +229,9 @@ public class MainActivity extends AppCompatActivity implements Playable{
     }
 
 
-
     @Override
-    public void onMediaPlay ( ) {
-
-    }
-
-    @Override
-    public void onMediaPause ( ) {
-
-    }
-
-    @Override
-    public void onMediaStop ( ) {
-
+    protected void onDestroy ( ) {
+        super.onDestroy ();
+        unregisterReceiver ( broadcastReceiver );
     }
 }

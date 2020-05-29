@@ -21,6 +21,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     private ArrayList< Music > songList;
     private RecyclerItemClickListener listener;
     private int selectedPosition;
+    private boolean initSelect = false;
 
     public SongAdapter (Context context, ArrayList<Music> songList, RecyclerItemClickListener listener){
 
@@ -44,17 +45,23 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
         Music song = songList.get(position);
         if(song != null){
 
-            if(selectedPosition == position){
-                holder.itemView.setBackgroundColor( ContextCompat.getColor(context, R.color.colorPrimary));
-                holder.iv_play_active.setVisibility( View.VISIBLE);
-            }else{
-                holder.itemView.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent));
-                holder.iv_play_active.setVisibility( View.INVISIBLE);
+            if(initSelect==true) {
+                if (selectedPosition == position) {
+                    holder.itemView.setBackgroundColor ( ContextCompat.getColor ( context, R.color.colorPrimary ) );
+                   // holder.iv_play_active.setVisibility ( View.VISIBLE );
+                } else {
+                    holder.itemView.setBackgroundColor ( ContextCompat.getColor ( context, android.R.color.transparent ) );
+                    //holder.iv_play_active.setVisibility ( View.INVISIBLE );
+                }
+            }else {
+                holder.itemView.setBackgroundColor ( ContextCompat.getColor ( context, android.R.color.transparent ) );
+                //holder.iv_play_active.setVisibility ( View.INVISIBLE );
+
             }
 
             holder.tv_title.setText(song.getName ());
             holder.tv_artist.setText(song.getArtist());
-
+            holder.tv_album.setText ( song.getAlbum () );
 
             holder.bind(song, listener);
 
@@ -69,13 +76,14 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public static class SongViewHolder extends RecyclerView.ViewHolder{
 
-        private TextView tv_title, tv_artist, tv_duration;
+        private TextView tv_title, tv_artist, tv_album;
         private ImageView  iv_play_active,iv_stop;
 
         public SongViewHolder(View itemView) {
             super(itemView);
             tv_title = (TextView) itemView.findViewById(R.id.tv_title);
             tv_artist = (TextView) itemView.findViewById(R.id.tv_artist);
+            tv_album = (TextView) itemView.findViewById ( R.id.tv_album );
             iv_play_active = (ImageView) itemView.findViewById(R.id.iv_play_active);
             iv_stop = (ImageView) itemView.findViewById ( R.id.iv_stop );
 
@@ -98,6 +106,11 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
 
     public void setSelectedPosition(int selectedPosition) {
         this.selectedPosition = selectedPosition;
+    }
+
+    public void setInitSelect(boolean selected)
+    {
+        this.initSelect = selected;
     }
 
     public int getSelectedPosition() {

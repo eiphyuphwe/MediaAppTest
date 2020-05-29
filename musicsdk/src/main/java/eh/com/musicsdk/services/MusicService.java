@@ -11,17 +11,22 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.media.session.MediaSessionCompat;
+
+import java.io.IOException;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import eh.com.musicsdk.R;
 import eh.com.musicsdk.receivers.MediaNotificationReceiver;
+import eh.com.musicsdk.utils.MyConstants;
 
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener,MediaPlayer.OnCompletionListener {
 
@@ -29,6 +34,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     boolean isStarted,isMusicOver;
     private String CHANNELID = "channel1";
     Bundle bundle;
+
 
 
 
@@ -61,9 +67,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             try {
               //  mediaPlayer = MediaPlayer.create ( getApplicationContext (), R.raw.jawel );
+                mediaPlayer = new MediaPlayer ();
                 mediaPlayer.setOnPreparedListener ( this );
                 mediaPlayer.setOnCompletionListener ( this );
-                mediaPlayer.prepareAsync ();//prepare the media without blocking the UI
+
             } catch (Exception e) {
 
             }
@@ -89,7 +96,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     }
 
                 }break;
-
+                case ServiceProviders.ACTION_RESUME:
+                {
+                    if(mediaPlayer!=null)
+                    {
+                        mediaPlayer.start ();
+                    }
+                }break;
                 case ServiceProviders.ACTION_PAUSE:
                 {
                     if(mediaPlayer.isPlaying ())
@@ -100,6 +113,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 case ServiceProviders.ACTION_STOP:
                 {
                     mediaPlayer.reset ();
+                    context.sendBroadcast (new Intent ( MyConstants.MUSIC_NOTI_FILTER )
+                            .putExtra ( MyConstants.NOTIACTIONNAME,intent.getAction () ));
+                    stopForeground ( STOP_FOREGROUND_REMOVE );
                 }break;
             }
         }
@@ -116,10 +132,21 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         String title = bundle.getString ( ServiceProviders.TITLE);
         String artist = bundle.getString ( ServiceProviders.ARTIST );
         String path = bundle.getString ( ServiceProviders.PATH );
+        Uri pathUri = Uri.parse ( path );
+
         if(intent.getAction ().equalsIgnoreCase ( ServiceProviders.ACTION_FORGROUND ))
         {
             if(!isStarted)
             {
+                mediaPlayer.setAudioStreamType ( AudioManager.STREAM_MUSIC );
+                try {
+                    mediaPlayer.setDataSource ( getApplicationContext (),pathUri );
+                }catch (IOException e)
+                {
+                    e.printStackTrace ();
+                }
+
+                mediaPlayer.prepareAsync ();//prepare the media without blocking the UI
                 //prepareNotifcation
                 createNotification ( getApplicationContext (),title,artist,path );
                 isStarted = true;
