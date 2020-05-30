@@ -22,13 +22,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import eh.com.mediaapptest.R;
 import eh.com.mediaapptest.ui.adapters.SongAdapter;
-import eh.com.mediaapptest.utils.MediaAppConstants;
 import eh.com.mediaapptest.utils.Utils;
 import eh.com.musicsdk.data.Music;
 import eh.com.musicsdk.providers.MusicProviders;
 import eh.com.musicsdk.services.ServiceProviders;
+import eh.com.musicsdk.utils.MyConstants;
 
-public class MainActivity extends AppCompatActivity implements Playable{
+public class MainActivity1 extends AppCompatActivity{
 
     private int currentIndex;
     boolean isPlaying = false;
@@ -41,8 +41,6 @@ public class MainActivity extends AppCompatActivity implements Playable{
     String path = "";
     androidx.appcompat.widget.Toolbar toolbar;
     String notiPath="";
-    public static Music selectedSong;
-
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -54,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements Playable{
 
 
         //getMusicDatafromSDK ( getApplicationContext (),"musicsdktest" );
-        if(checkPermissionREAD_EXTERNAL_STORAGE ( MainActivity.this))
+        if(checkPermissionREAD_EXTERNAL_STORAGE ( MainActivity1.this))
         {
             getMusicDatafromSDK ( getApplicationContext (),"musicsdktest" );
         }
@@ -74,24 +72,33 @@ public class MainActivity extends AppCompatActivity implements Playable{
                     }
                 }
 
-                changeSelectedSong ( position ); // highlight selected song
-                showPlaySong ( song ); // show play song , visible the toobar
-
+                Utils.createNotification ( getApplicationContext (),song,true );
+                changeSelectedSong ( position );
+                showPlaySong ( song );
 
             }
         } );
 
         rcySongs.setAdapter (songAdapter);
 
-
+        onNewIntent (getIntent ());
 
         catchEvents ();
-        IntentFilter notiIntentFilter = new IntentFilter ( MediaAppConstants.NOTIFILTER);
+        IntentFilter notiIntentFilter = new IntentFilter ( MyConstants.MUSIC_NOTI_FILTER);
         registerReceiver (broadcastReceiver,notiIntentFilter);
 
     }
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver () {
+        @Override
+        public void onReceive (Context context, Intent intent) {
 
+            if(intent.getAction ().equals ( MyConstants.MUSIC_NOTI_FILTER ))
+            {
+                toolbar.setVisibility (View.INVISIBLE);
+            }
+        }
+    };
     private void resetPlayer()
     {
         isPlaying = false;
@@ -110,8 +117,6 @@ public class MainActivity extends AppCompatActivity implements Playable{
 
     private void showPlaySong(Music music)
     {
-        selectedSong = music; // put the selected song
-        //show in play mode
         toolbar.setVisibility ( View.VISIBLE );
         tvTitle.setText ( music.getName ()+"" );
         tvAlbum.setText ( music.getAlbum ()+"" );
@@ -158,23 +163,14 @@ public class MainActivity extends AppCompatActivity implements Playable{
                 if(!isPlaying) {
                     if(!path.equalsIgnoreCase ( "" )) {
                         iv_play.setImageResource ( R.drawable.ic_pause_circle_outline_black_24dp );
+                        ServiceProviders.playMusic ( getApplicationContext (), tvTitle.getText ().toString (),tvArtist.getText ().toString (),path );
                         isPlaying = true;
-                       // if(ServiceProviders.isMusicPlaying ( getApplicationContext () ))
-                        {
-                            Utils.createNotification ( MainActivity.this,selectedSong,true );
-                        }
-                        ServiceProviders.playMusic ( getApplicationContext (), tvTitle.getText ().toString (),tvArtist.getText ().toString (),path);
-
                     }
                 }
                 else {
 
-                    ServiceProviders.pauseMusic ( MainActivity.this);
+                    ServiceProviders.pauseMusic ( MainActivity1.this);
                     resetPlayButton ();
-                  //  if(!ServiceProviders.isMusicPlaying ( getApplicationContext () ))
-                    {
-                        Utils.createNotification ( MainActivity.this,selectedSong,false );
-                    }
 
                 }
 
@@ -185,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements Playable{
             @Override
             public void onClick (View v) {
 
-                ServiceProviders.stopMusic ( MainActivity.this );
+                ServiceProviders.stopMusic ( MainActivity1.this );
                 resetPlayButton ();
 
 
@@ -214,40 +210,15 @@ public class MainActivity extends AppCompatActivity implements Playable{
         toolbar = (androidx.appcompat.widget.Toolbar)findViewById ( R.id.toolbar );
         toolbar.setVisibility ( View.INVISIBLE );
         rcySongs.setLayoutManager(new LinearLayoutManager (getApplicationContext()));
-        selectedSong = new Music ();
 
     }
-
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver () {
-        @Override
-        public void onReceive (Context context, Intent intent) {
-
-            String action = intent.getExtras ().getString ( MediaAppConstants.NOTIACTIONNAME );
-            switch (action)
-            {
-                case MediaAppConstants.ACTION_PLAY :
-                {
-                   onResumed ();
-                }break;
-                case MediaAppConstants.ACTION_PAUSE :
-                {
-                    onPaused ();
-                }break;
-                case MediaAppConstants.ACTION_STOP:
-                {
-                    onStopped ();
-                }break;
-            }
-
-        }
-    };
 
 
 
 
     private boolean checkPermissionREAD_EXTERNAL_STORAGE(Context context) {
         int currentAPIVersion = Build.VERSION.SDK_INT;
-        if (currentAPIVersion >= Build.VERSION_CODES.M) {
+        if (currentAPIVersion >= android.os.Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(context,
                     Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -297,46 +268,5 @@ public class MainActivity extends AppCompatActivity implements Playable{
     protected void onDestroy ( ) {
         super.onDestroy ();
         unregisterReceiver ( broadcastReceiver );
-    }
-
-    @Override
-    public void onResumed ( ) {
-
-        //ServiceProviders.playMusic ( MainActivity.this,selectedSong.getName (),selectedSong.getArtist (),selectedSong.getFilePath () );
-        ServiceProviders.resumeMusic ( MainActivity.this );
-        Utils.createNotification ( MainActivity.this,selectedSong,true );
-        resetPauseButton ();
-    }
-
-    @Override
-    public void onPaused ( ) {
-
-      //  if(ServiceProviders.isMusicPlaying ( MainActivity.this ))
-        {
-            ServiceProviders.pauseMusic ( MainActivity.this );
-            Utils.createNotification ( MainActivity.this,selectedSong,false );
-            resetPlayButton ();
-
-        }
-    }
-
-    @Override
-    public void onStopped ( ) {
-
-        ServiceProviders.onStopMusic (MainActivity.this);
-        Utils.createNotification ( MainActivity.this,selectedSong,false );
-        resetPlayButton ();
-    }
-
-
-    private void resetPauseButton()
-    {
-        isPlaying = false;
-        iv_play.setImageResource ( R.drawable.ic_pause_circle_outline_black_24dp );
-    }
-
-    @Override
-    public void onBackPressed ( ) {
-       // super.onBackPressed ();
     }
 }

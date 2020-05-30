@@ -1,41 +1,29 @@
 package eh.com.musicsdk.services;
 
-import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.media.session.MediaSessionCompat;
 
 import java.io.IOException;
 
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import eh.com.musicsdk.R;
 import eh.com.musicsdk.receivers.MediaNotificationReceiver;
 import eh.com.musicsdk.utils.MyConstants;
 
-public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener{
 
     private MediaPlayer mediaPlayer = null;
     boolean isStarted, isMusicOver;
-    private String CHANNELID = "channel1";
+
     Bundle bundle;
-    private String activityName = "";
+
 
 
     @Override
@@ -55,10 +43,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         isMusicOver = false;
     }
 
-    @Override
-    public void onCompletion (MediaPlayer mp) {
 
-    }
 
     private void busyWork ( ) {
         if (mediaPlayer == null) {
@@ -68,7 +53,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 //  mediaPlayer = MediaPlayer.create ( getApplicationContext (), R.raw.jawel );
                 mediaPlayer = new MediaPlayer ();
                 mediaPlayer.setOnPreparedListener ( this );
-                mediaPlayer.setOnCompletionListener ( this );
 
             } catch (Exception e) {
 
@@ -106,10 +90,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 }
                 break;
                 case MyConstants.ACTION_STOP: {
-                    mediaPlayer.reset ();
+                    mediaPlayer.pause ();
+                    mediaPlayer.seekTo ( 0 );
                     //context.sendBroadcast (new Intent ( MyConstants.MUSIC_NOTI_FILTER )
                     //.putExtra ( MyConstants.NOTIACTIONNAME,intent.getAction () ));
-                    stopForeground ( STOP_FOREGROUND_REMOVE );
+                    /*stopForeground ( STOP_FOREGROUND_REMOVE );
                     Class< ? > targetClass = null;
                     try {
                         targetClass = Class.forName ( activityName );
@@ -125,7 +110,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace ();
                     }
-                    System.exit ( 0 );
+                    System.exit ( 0 );*/
 
 
                 }
@@ -147,7 +132,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             String artist = bundle.getString ( MyConstants.ARTIST );
             String path = bundle.getString ( MyConstants.PATH );
             Uri pathUri = Uri.parse ( path );
-            activityName = bundle.getString ( MyConstants.ACTIVITYNAME );
+
 
             if (intent.getAction ().equalsIgnoreCase ( MyConstants.ACTION_FORGROUND )) {
                 if (!isStarted) {
@@ -159,8 +144,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     }
 
                     mediaPlayer.prepareAsync ();//prepare the media without blocking the UI
-                    //prepareNotifcation
-                    createNotification ( getApplicationContext (), title, artist, path );
                     isStarted = true;
                 }
                 if (mediaPlayer != null)
@@ -197,92 +180,25 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return null;
     }
 
-    private void createNotificationChannel ( ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel (
-                    CHANNELID,
-                    "Foreground Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            NotificationManager manager = getSystemService ( NotificationManager.class );
-            manager.createNotificationChannel ( serviceChannel );
-        }
-    }
 
-    public void createNotification (Context context, String musicTitle, String artist, String path) {
-
-        createNotificationChannel ();
-        Notification notification;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from ( context );
-            MediaSessionCompat mediaSessionCompat = new MediaSessionCompat ( context, "tag" );
-            Bitmap icon = BitmapFactory.decodeResource ( context.getResources (), R.drawable.ic_album_black_24dp );
-
-            int btnPlay = R.drawable.ic_play_arrow_black_24dp;
-            Intent intentPlay = new Intent ( context, MediaNotificationReceiver.class )
-                    .setAction ( MyConstants.ACTION_PLAY );
-
-            PendingIntent pendingPlayIntent = PendingIntent.getBroadcast ( context,
-                    0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT );
-
-            int btnPause = R.drawable.ic_pause_black_24dp;
-            Intent intentPause = new Intent ( context, MediaNotificationReceiver.class )
-                    .setAction ( MyConstants.ACTION_PAUSE );
-
-            PendingIntent pendingPauseIntent = PendingIntent.getBroadcast ( context,
-                    0, intentPause, PendingIntent.FLAG_UPDATE_CURRENT );
-
-
-            int btnStop = R.drawable.ic_stop_black_24dp;
-            Intent intentStop = new Intent ( context, MediaNotificationReceiver.class )
-                    .setAction ( MyConstants.ACTION_STOP );
-
-            PendingIntent pendingStopIntent = PendingIntent.getBroadcast ( context,
-                    0, intentStop, PendingIntent.FLAG_UPDATE_CURRENT );
-
-
-            Class< ? > targetClass = null;
-            try {
-                targetClass = Class.forName ( activityName );
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace ();
-            }
-            Intent notificationIntent = new Intent ( this, targetClass );
-            notificationIntent.putExtra ( "path", path );
-            notificationIntent.setFlags ( Intent.FLAG_ACTIVITY_NEW_TASK| Intent.FLAG_ACTIVITY_CLEAR_TASK );
-            PendingIntent pendingIntent = PendingIntent.getActivity ( this,
-                    0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT );
-
-
-            notification = new NotificationCompat.Builder ( context, CHANNELID )
-                    .setSmallIcon ( R.drawable.ic_music_note )
-                    .setContentTitle ( musicTitle )
-                    .setContentText ( artist )
-                    .setContentIntent ( pendingIntent )
-                    .setLargeIcon ( icon )
-                    .setOnlyAlertOnce ( true )
-                    .setShowWhen ( false )
-                    .addAction ( btnPlay, "Play", pendingPlayIntent )
-                    .addAction ( btnPause, "Pause", pendingPauseIntent )
-                    .addAction ( btnStop, "Stop", pendingStopIntent )
-                    .setStyle ( new androidx.media.app.NotificationCompat.MediaStyle ()
-                            .setShowActionsInCompactView ( 0, 1, 2 )
-                            .setMediaSession ( mediaSessionCompat.getSessionToken () ) )
-                    .setPriority ( NotificationCompat.PRIORITY_HIGH )
-                    .build ();
-            // notificationManagerCompat.notify ( 1,notification );
-            startForeground ( 1, notification );
-
-        }
-    }
 
 
     @Override
     public void onTaskRemoved (Intent rootIntent) {
-        //  super.onTaskRemoved ( rootIntent );
-        //stopForeground ( Service.STOP_FOREGROUND_REMOVE );
+
         stopSelf ();
     }
 
+
+    public  boolean isMusicPlaying()
+    {
+
+        if(mediaPlayer.isPlaying ())
+        {
+            return true;
+        }
+        else
+            return false;
+    }
 
 }

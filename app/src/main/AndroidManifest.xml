@@ -23,8 +23,9 @@
         </activity>
 
         <receiver android:name="eh.com.musicsdk.receivers.MediaNotificationReceiver"/>
+        <receiver android:name=".receivers.NotificationReceiver"/>
         <service
-            android:name="eh.com.musicsdk.services.MusicService"
+            android:name="eh.com.musicsdk.services.MusicPlayerService"
             android:enabled="true"
             android:exported="true"></service>
     </application>

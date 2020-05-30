@@ -2,7 +2,7 @@ package eh.com.mediaapptest.ui;
 
 public interface Playable {
 
-    void onMediaPlay();
-    void onMediaPause();
-    void onMediaStop();
+    void onResumed();
+    void onPaused();
+    void onStopped();
 }
