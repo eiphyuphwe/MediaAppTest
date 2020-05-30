@@ -39,11 +39,13 @@ public class MainActivity extends AppCompatActivity{
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
     String path = "";
     androidx.appcompat.widget.Toolbar toolbar;
+    String notiPath="";
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate ( savedInstanceState );
         setContentView ( R.layout.activity_main );
+
 
         declare ();
 
@@ -76,6 +78,8 @@ public class MainActivity extends AppCompatActivity{
         } );
 
         rcySongs.setAdapter (songAdapter);
+
+        onNewIntent (getIntent ());
 
         catchEvents ();
         IntentFilter notiIntentFilter = new IntentFilter ( MyConstants.MUSIC_NOTI_FILTER);
@@ -111,12 +115,41 @@ public class MainActivity extends AppCompatActivity{
 
     private void showPlaySong(Music music)
     {
+        toolbar.setVisibility ( View.VISIBLE );
         tvTitle.setText ( music.getName ()+"" );
         tvAlbum.setText ( music.getAlbum ()+"" );
         tvArtist.setText ( music.getArtist () );
         path = music.getFilePath ();
 
 
+    }
+
+    @Override
+    protected void onNewIntent (Intent intent) {
+        super.onNewIntent ( intent );
+        Bundle bundle = new Bundle ( );
+        if(intent!=null)
+        if(intent.getExtras ()!=null)
+        {
+            bundle = intent.getExtras ();
+            String path = bundle.getString ("path" );
+            if(path!=null)
+            findMusicbyPath (path);
+
+        }
+    }
+
+    private void findMusicbyPath(String path)
+    {
+        for(int i=0;i<songList.size ();i++)
+        {
+            if(path.equalsIgnoreCase ( songList.get ( i ).getFilePath () ))
+            {
+                changeSelectedSong ( i );
+                showPlaySong ( songList.get ( i ) );
+
+            }
+        }
     }
 
 
@@ -128,7 +161,7 @@ public class MainActivity extends AppCompatActivity{
                 if(!isPlaying) {
                     if(!path.equalsIgnoreCase ( "" )) {
                         iv_play.setImageResource ( R.drawable.ic_pause_circle_outline_black_24dp );
-                        ServiceProviders.playMusic ( getApplicationContext (), tvTitle.getText ().toString (),tvArtist.getText ().toString (),path );
+                        ServiceProviders.playMusic ( getApplicationContext (), tvTitle.getText ().toString (),tvArtist.getText ().toString (),path,"eh.com.mediaapptest.ui.MainActivity" );
                         isPlaying = true;
                     }
                 }

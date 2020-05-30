@@ -16,15 +16,21 @@ public class ServiceProviders {
     public static final String TITLE = "title";
     public static final String ARTIST = "artist";
     public static final String PATH = "path";
-    public static void playMusic(Context context,String title,String artist,String path)
+    public static final String ACTIVITYNAME = "activity";
+
+
+
+    public static void playMusic(Context context, String title, String artist, String path, String activityName)
     {
         Intent intent = new Intent ( context,MusicService.class );
         Bundle bundle = new Bundle ( );
         bundle.putString ( TITLE,title );
         bundle.putString ( ARTIST,artist );
         bundle.putString ( PATH,path );
+        bundle.putString ( ACTIVITYNAME,activityName );
         intent.putExtras ( bundle );
         intent.setAction (ACTION_FORGROUND);
+
         context.startForegroundService ( intent );
     }
 
