@@ -13,7 +13,7 @@ public class Utils {
 
 
 
-    public static ArrayList< Music> getMusicFilesfromSDKFolder(final Context context,String folderName)
+    public static ArrayList< Music> getMusicFilesfromSDCardFolder (final Context context, String folderName)
     {
         ArrayList<Music> musicList = new ArrayList<> ( );
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -21,7 +21,7 @@ public class Utils {
         Cursor c = context.getContentResolver().query(uri,
                 projection,
                 MediaStore.Audio.Media.DATA + " like ? ",
-                new String[]{"%musicsdktest%"}, null);
+                new String[]{"%"+folderName+"%"}, null);
         if(c !=null)
         {
             while ((c.moveToNext ()))

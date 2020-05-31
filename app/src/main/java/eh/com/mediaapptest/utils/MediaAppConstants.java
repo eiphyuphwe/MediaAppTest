@@ -9,5 +9,6 @@ public class MediaAppConstants {
     public static final String ACTION_PAUSE = "eh.com.musicsdk.musicapp.action.PAUSE";
     public static final String ACTION_RESUME = "eh.com.musicsdk.musicapp.action.RESUME";
     public static final String ACTION_STOP = "eh.com.musicsdk.musicapp.action.STOP";
+    public static final String ISNOTIPLAY  = "isNotiPlay";
 
 }

@@ -13,41 +13,40 @@ import android.support.v4.media.session.MediaSessionCompat;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import eh.com.mediaapptest.R;
 import eh.com.mediaapptest.receivers.NotificationReceiver;
-import eh.com.mediaapptest.ui.MainActivity;
+import eh.com.mediaapptest.ui.main.activity.MainActivity;
 import eh.com.musicsdk.data.Music;
 
 public class Utils {
 
     private static String CHANNELID = "channel1";
 
-    public static void createNotification (Context context, Music music,boolean isPlay) {
+    public static void createNotification (Context context, Music music, boolean isPlay) {
 
-        createNotificationChannel (context);
+        createNotificationChannel ( context );
         Notification notification;
         NotificationCompat.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from ( context );
             MediaSessionCompat mediaSessionCompat = new MediaSessionCompat ( context, "tag" );
-            Bitmap icon = BitmapFactory.decodeResource ( context.getResources (), eh.com.musicsdk.R.drawable.ic_album_black_24dp );
+            Bitmap icon = BitmapFactory.decodeResource ( context.getResources (), R.drawable.ic_album_black_24dp );
 
-            int btnPlay=0;
+            int btnPlay = 0;
             String playtitle = "";
-            PendingIntent pendingPlayIntent=null;
-            if(isPlay)
-            {
+            PendingIntent pendingPlayIntent = null;
+            if (isPlay) {
                 playtitle = "pause";
-                btnPlay = eh.com.musicsdk.R.drawable.ic_pause_black_24dp;
+                btnPlay = R.drawable.ic_pause_black_24dp;
                 Intent intentPause = new Intent ( context, NotificationReceiver.class )
                         .setAction ( MediaAppConstants.ACTION_PAUSE );
 
                 pendingPlayIntent = PendingIntent.getBroadcast ( context,
                         0, intentPause, PendingIntent.FLAG_UPDATE_CURRENT );
 
-            }
-            else {
-                 playtitle = "play";
-                 btnPlay = eh.com.musicsdk.R.drawable.ic_play_arrow_black_24dp;
+            } else {
+                playtitle = "play";
+                btnPlay = R.drawable.ic_play_arrow_black_24dp;
                 Intent intentPlay = new Intent ( context, NotificationReceiver.class )
                         .setAction ( MediaAppConstants.ACTION_PLAY );
 
@@ -56,8 +55,7 @@ public class Utils {
             }
 
 
-
-            int btnStop = eh.com.musicsdk.R.drawable.ic_stop_black_24dp;
+            int btnStop = R.drawable.ic_stop_black_24dp;
             Intent intentStop = new Intent ( context, NotificationReceiver.class )
                     .setAction ( MediaAppConstants.ACTION_STOP );
 
@@ -67,28 +65,31 @@ public class Utils {
 
             Intent notificationIntent = new Intent ( context, MainActivity.class );
             notificationIntent.putExtra ( "path", music.getFilePath () );
-            notificationIntent.setFlags ( Intent.FLAG_ACTIVITY_NEW_TASK| Intent.FLAG_ACTIVITY_CLEAR_TASK );
+            notificationIntent.putExtra ( MediaAppConstants.ISNOTIPLAY,isPlay );
+            notificationIntent.setFlags ( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
             PendingIntent pendingIntent = PendingIntent.getActivity ( context,
                     0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT );
 
 
             builder = new NotificationCompat.Builder ( context, CHANNELID )
-                    .setSmallIcon ( eh.com.musicsdk.R.drawable.ic_music_note )
+                    .setSmallIcon ( R.drawable.ic_music_note )
                     .setContentTitle ( music.getName () )
                     .setContentText ( music.getAlbum () )
                     .setContentIntent ( pendingIntent )
                     .setLargeIcon ( icon )
+                    .setAutoCancel ( false )
+                    .setOngoing ( true )
                     .setOnlyAlertOnce ( true )
                     .setShowWhen ( false )
                     .addAction ( btnPlay, playtitle, pendingPlayIntent )
                     .addAction ( btnStop, "Stop", pendingStopIntent )
                     .setStyle ( new androidx.media.app.NotificationCompat.MediaStyle ()
-                            .setShowActionsInCompactView ( 0, 1)
+                            .setShowActionsInCompactView ( 0, 1 )
                             .setMediaSession ( mediaSessionCompat.getSessionToken () ) )
                     .setPriority ( NotificationCompat.PRIORITY_HIGH );
-             notification = builder.build ();
-             notificationManagerCompat.notify ( 1,notification );
-            //context.startForeground ( 1, notification );
+            notification = builder.build ();
+            notificationManagerCompat.notify ( 1, notification );
+
 
         }
     }
@@ -102,7 +103,10 @@ public class Utils {
             );
             NotificationManager manager = context.getSystemService ( NotificationManager.class );
             manager.createNotificationChannel ( serviceChannel );
+
         }
+
+
     }
 
 

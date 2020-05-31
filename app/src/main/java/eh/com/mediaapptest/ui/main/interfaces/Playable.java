@@ -1,4 +1,4 @@
-package eh.com.mediaapptest.ui;
+package eh.com.mediaapptest.ui.main.interfaces;
 
 public interface Playable {
 

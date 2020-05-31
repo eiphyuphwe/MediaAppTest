@@ -7,12 +7,6 @@ public class Music {
     String album;
     String filePath;
 
-   /* public Music (String name, String artist, String album, String filePath) {
-        this.name = name;
-        this.artist = artist;
-        this.album = album;
-        this.filePath = filePath;
-    }*/
 
     public String getName ( ) {
         return name;
