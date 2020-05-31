@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import eh.com.mediaapptest.R;
 import eh.com.mediaapptest.ui.main.adapters.SongAdapter;
 import eh.com.mediaapptest.ui.main.interfaces.Playable;
-import eh.com.mediaapptest.ui.main.reposistory.MainReposistory;
 import eh.com.mediaapptest.ui.main.viewmodel.MainViewModel;
 import eh.com.mediaapptest.utils.MediaAppConstants;
 import eh.com.mediaapptest.utils.Utils;
@@ -44,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
     String path = "";
     androidx.appcompat.widget.Toolbar toolbar;
     public static Music selectedSong;
-    MainReposistory reposistory;
     MainViewModel viewModel;
     private boolean notiIsPlay = false;
 
@@ -56,12 +54,13 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
         declare ();
 
-        viewModel.loadMusicLists ( "musicsdktest" );
-
 
         if (checkPermissionREAD_EXTERNAL_STORAGE ( MainActivity.this )) {
-            getMusicDatafromSDK ();
+            viewModel.loadMusicLists ( "musicsdktest" );
+
         }
+
+        getMusicDatafromSDK ();
 
         songAdapter = new SongAdapter ( getApplicationContext (), songList, new SongAdapter.RecyclerItemClickListener () {
             @Override
@@ -97,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
     private void resetPlayer ( ) {
         isPlaying = false;
         iv_play.setImageResource ( R.drawable.ic_play_circle_outline_black_24dp );
-      //  ServiceProviders.stopService ( getApplicationContext () );
         viewModel.onStopService ( getApplicationContext () );
     }
 
@@ -181,13 +179,12 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
                         Utils.createNotification ( MainActivity.this, selectedSong, true );
 
-                       // ServiceProviders.onPlayMusic ( getApplicationContext (), tvTitle.getText ().toString (), tvArtist.getText ().toString (), path );
                         viewModel.onPlayMusic ( getApplicationContext (), tvTitle.getText ().toString (), tvArtist.getText ().toString (), path );
 
                     }
                 } else {
 
-                    //ServiceProviders.onPauseMusic ( MainActivity.this );
+
                     viewModel.onPauseMusic ( MainActivity.this );
                     resetPlayButton ();
 
@@ -203,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
             @Override
             public void onClick (View v) {
 
-               // ServiceProviders.stopService ( MainActivity.this );
+
                 viewModel.onStopService ( MainActivity.this );
                 resetPlayButton ();
 
@@ -220,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
 
     private void declare ( ) {
-        reposistory = new MainReposistory ( getApplication () );
         viewModel = ViewModelProviders.of ( this ).get ( MainViewModel.class );
         songList = new ArrayList<> ();
         rcySongs = (RecyclerView) findViewById ( R.id.rcy_songs );
@@ -290,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
             case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // do your stuff
-                    getMusicDatafromSDK ();
+                    viewModel.loadMusicLists ( "musicsdktest" );
                 } else {
 
                 }
@@ -301,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
         }
     }
 
-    public void getMusicDatafromSDK () {
+    public void getMusicDatafromSDK ( ) {
 
         viewModel.getSongLists ().observe ( this, new Observer< ArrayList< Music > > () {
             @Override
@@ -327,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onResumed ( ) {
 
 
-       // ServiceProviders.onResumeMusic ( MainActivity.this );
+
         viewModel.onResumeMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, true );
         resetPauseButton ();
@@ -337,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onPaused ( ) {
 
 
-        //ServiceProviders.onPauseMusic ( MainActivity.this );
+
         viewModel.onPauseMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, false );
         resetPlayButton ();
@@ -349,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onStopped ( ) {
 
 
-       // ServiceProviders.onStopMusic ( MainActivity.this );
+
         viewModel.onStopMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, false );
         resetPlayButton ();

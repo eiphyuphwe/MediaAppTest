@@ -101,6 +101,7 @@ public class Utils {
                     "Foreground Service Channel",
                     NotificationManager.IMPORTANCE_DEFAULT
             );
+
             NotificationManager manager = context.getSystemService ( NotificationManager.class );
             manager.createNotificationChannel ( serviceChannel );
 
