@@ -70,7 +70,16 @@ public class MainActivity extends AppCompatActivity implements Playable {
                 if (!path.equalsIgnoreCase ( "" )) {
                     if (!path.equalsIgnoreCase ( song.getFilePath () )) {
                         // not same song
-                        resetPlayer ();
+                         //resetPlayer (); // comment today epp
+                         if(isPlaying)
+                         {
+                             viewModel.onRestart ( MainActivity.this,song.getName (),song.getArtist (),song.getFilePath ());
+                             Utils.createNotification ( MainActivity.this, song, true );
+                         }
+                         else {
+
+                             resetPlayer ();
+                         }
 
                     }
                 }
@@ -187,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
                     viewModel.onPauseMusic ( MainActivity.this );
                     resetPlayButton ();
-
                     Utils.createNotification ( MainActivity.this, selectedSong, false );
 
 
@@ -201,7 +209,9 @@ public class MainActivity extends AppCompatActivity implements Playable {
             public void onClick (View v) {
 
 
-                viewModel.onStopService ( MainActivity.this );
+                //viewModel.onStopService ( MainActivity.this ); // comment by epp
+                viewModel.onStopMusic ( MainActivity.this );
+                Utils.createNotification ( MainActivity.this, selectedSong, false ); // show pause button
                 resetPlayButton ();
 
 

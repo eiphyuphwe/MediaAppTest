@@ -47,6 +47,19 @@ public class ServiceProviders {
                 .putExtra ( Constants.ACTIONNAME, Constants.ACTION_STOP ));
     }
 
+    public static void onRestart(Context context,String title, String artist, String path)
+    {
+        Intent intent = new Intent ( Constants.MY_MUSIC_FILTER );
+        Bundle bundle = new Bundle ( );
+        bundle.putString ( Constants.TITLE,title );
+        bundle.putString ( Constants.ARTIST,artist );
+        bundle.putString ( Constants.PATH,path );
+        bundle.putString ( Constants.ACTIONNAME,Constants.ACTION_RESTART);
+        intent.putExtras ( bundle );
+
+        context.sendBroadcast ( intent );
+    }
+
 
     public static void stopService(Context context)
     {
@@ -54,6 +67,7 @@ public class ServiceProviders {
         intent.setAction ( Constants.ACTION_STOP);
         context.stopService (intent);
     }
+
 
 
 }

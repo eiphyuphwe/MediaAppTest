@@ -60,4 +60,9 @@ public class MainViewModel extends AndroidViewModel {
         ServiceProviders.onStopMusic ( context);
     }
 
+    public void onRestart(Context context, String title, String artist, String path)
+    {
+        ServiceProviders.onRestart ( context,title,artist,path );
+    }
+
 }

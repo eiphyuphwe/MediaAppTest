@@ -100,8 +100,31 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
                     mediaPlayer.seekTo ( 0 );
 
 
-                }
-                break;
+                }break;
+                case Constants.ACTION_RESTART :{
+
+                    if(mediaPlayer!=null)
+                    {
+                        mediaPlayer.reset ();
+                    }
+                    if (intent != null) {
+                        bundle = intent.getExtras ();
+                        String title = bundle.getString ( Constants.TITLE );
+                        String artist = bundle.getString ( Constants.ARTIST );
+                        String path = bundle.getString ( Constants.PATH );
+                        Uri pathUri = Uri.parse ( path );
+                        try {
+                            mediaPlayer.setDataSource ( getApplicationContext (), pathUri );
+                        } catch (IOException e) {
+                            e.printStackTrace ();
+                        }
+
+                        mediaPlayer.prepareAsync ();//prepare the media without blocking the UI
+                        if(mediaPlayer!=null)
+                            mediaPlayer.start ();
+                        isStarted=true;
+                    }
+                }break;
             }
         }
     };
@@ -178,14 +201,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         stopSelf ();
     }
 
-
-    public boolean isMusicPlaying ( ) {
-
-        if (mediaPlayer.isPlaying ()) {
-            return true;
-        } else
-            return false;
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private void startForgoundNoti ( ) {
