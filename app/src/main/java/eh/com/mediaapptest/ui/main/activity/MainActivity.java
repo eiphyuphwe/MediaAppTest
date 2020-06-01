@@ -70,16 +70,14 @@ public class MainActivity extends AppCompatActivity implements Playable {
                 if (!path.equalsIgnoreCase ( "" )) {
                     if (!path.equalsIgnoreCase ( song.getFilePath () )) {
                         // not same song
-                         //resetPlayer (); // comment today epp
-                         if(isPlaying)
-                         {
-                             viewModel.onRestart ( MainActivity.this,song.getName (),song.getArtist (),song.getFilePath ());
-                             Utils.createNotification ( MainActivity.this, song, true );
-                         }
-                         else {
 
-                             resetPlayer ();
-                         }
+                        if (isPlaying) {
+                            viewModel.onRestart ( MainActivity.this, song.getName (), song.getArtist (), song.getFilePath () );
+                            Utils.createNotification ( MainActivity.this, song, true );
+                        } else {
+
+                            resetPlayer ();
+                        }
 
                     }
                 }
@@ -94,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
         rcySongs.setAdapter ( songAdapter );
 
 
-        //onNewIntent ( getIntent () );
         catchEvents ();
         IntentFilter notiIntentFilter = new IntentFilter ( MediaAppConstants.NOTIFILTER );
         registerReceiver ( broadcastReceiver, notiIntentFilter );
@@ -129,16 +126,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
     }
 
-    public boolean checkNotiIntent (Intent intent) {
-        Bundle bundle = new Bundle ();
-        if (intent != null)
-            if (intent.getExtras () != null) {
-                return true;
-            } else
-                return false;
-        return false;
-
-    }
 
     @Override
     protected void onNewIntent (Intent intent) {
@@ -169,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
                     isPlaying = false;
                     iv_play.setImageResource ( R.drawable.ic_play_circle_outline_white );
                 }
-                // Utils.createNotification ( MainActivity.this,songList.get ( i ),true );  // activity destory, noti will lost, so created noti again
 
 
             }
@@ -209,7 +195,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
             public void onClick (View v) {
 
 
-                //viewModel.onStopService ( MainActivity.this ); // comment by epp
                 viewModel.onStopMusic ( MainActivity.this );
                 Utils.createNotification ( MainActivity.this, selectedSong, false ); // show pause button
                 resetPlayButton ();
@@ -333,7 +318,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onResumed ( ) {
 
 
-
         viewModel.onResumeMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, true );
         resetPauseButton ();
@@ -341,7 +325,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
     @Override
     public void onPaused ( ) {
-
 
 
         viewModel.onPauseMusic ( MainActivity.this );
@@ -353,7 +336,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
     @Override
     public void onStopped ( ) {
-
 
 
         viewModel.onStopMusic ( MainActivity.this );
@@ -372,7 +354,6 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onBackPressed ( ) {
         // super.onBackPressed ();
     }
-
 
 }
 
