@@ -4,10 +4,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -15,7 +13,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 import java.io.IOException;
 
@@ -68,83 +65,25 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         }
     }
 
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver () {
-        @Override
-        public void onReceive (Context context, Intent intent) {
-
-            String action = intent.getExtras ().getString ( Constants.ACTIONNAME );
-            switch (action) {
-                case Constants.ACTION_PLAY: {
-                    if (mediaPlayer.isPlaying ()) {
-                        mediaPlayer.pause ();
-                    } else {
-                        mediaPlayer.start ();
-                    }
-
-                }
-                break;
-                case Constants.ACTION_RESUME: {
-                    if (mediaPlayer != null) {
-                        mediaPlayer.start ();
-                    }
-                }
-                break;
-                case Constants.ACTION_PAUSE: {
-                    if (mediaPlayer.isPlaying ()) {
-                        mediaPlayer.pause ();
-                    }
-                }
-                break;
-                case Constants.ACTION_STOP: {
-                    mediaPlayer.pause ();
-                    mediaPlayer.seekTo ( 0 );
-
-
-                }break;
-                case Constants.ACTION_RESTART :{
-
-                    if(mediaPlayer!=null)
-                    {
-                        mediaPlayer.reset ();
-                    }
-                    if (intent != null) {
-                        bundle = intent.getExtras ();
-                        String title = bundle.getString ( Constants.TITLE );
-                        String artist = bundle.getString ( Constants.ARTIST );
-                        String path = bundle.getString ( Constants.PATH );
-                        Uri pathUri = Uri.parse ( path );
-                        try {
-                            mediaPlayer.setDataSource ( getApplicationContext (), pathUri );
-                        } catch (IOException e) {
-                            e.printStackTrace ();
-                        }
-
-                        mediaPlayer.prepareAsync ();//prepare the media without blocking the UI
-                        if(mediaPlayer!=null)
-                            mediaPlayer.start ();
-                        isStarted=true;
-                    }
-                }break;
-            }
-        }
-    };
 
     @Override
     public int onStartCommand (Intent intent, int flags, int startId) {
 
-
-        IntentFilter musicIntentFilter = new IntentFilter ( Constants.MY_MUSIC_FILTER );
-        registerReceiver ( broadcastReceiver, musicIntentFilter );
+        String title, artist, path;
+        Uri pathUri = null;
 
         if (intent != null) {
-            bundle = intent.getExtras ();
-            String title = bundle.getString ( Constants.TITLE );
-            String artist = bundle.getString ( Constants.ARTIST );
-            String path = bundle.getString ( Constants.PATH );
-            Uri pathUri = Uri.parse ( path );
+            if (intent.getAction () == Constants.ACTION_PLAY || (intent.getAction () == Constants.ACTION_RESTART)) {
+                bundle = intent.getExtras ();
+                title = bundle.getString ( Constants.TITLE );
+                artist = bundle.getString ( Constants.ARTIST );
+                path = bundle.getString ( Constants.PATH );
+                pathUri = Uri.parse ( path );
+                isStarted = false;
+                mediaPlayer.reset ();
+            }
 
-
-            if (intent.getAction ().equalsIgnoreCase ( Constants.ACTION_FORGROUND )) {
+            if ((intent.getAction ().equalsIgnoreCase ( Constants.ACTION_PLAY )) || (intent.getAction ().equals ( Constants.ACTION_RESTART ))) {
                 if (!isStarted) {
                     mediaPlayer.setAudioStreamType ( AudioManager.STREAM_MUSIC );
                     try {
@@ -159,7 +98,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
                 }
                 if (mediaPlayer != null)
                     mediaPlayer.start ();
-            } else if (intent.getAction ().equalsIgnoreCase ( Constants.ACTION_PLAY )) {
+            } else if (intent.getAction ().equalsIgnoreCase ( Constants.ACTION_RESUME )) {
                 if (mediaPlayer != null)
                     mediaPlayer.start ();
             } else if (intent.getAction ().equalsIgnoreCase ( Constants.ACTION_PAUSE )) {
@@ -167,7 +106,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
                     mediaPlayer.pause ();
             } else if (intent.getAction ().equalsIgnoreCase ( Constants.ACTION_STOP )) {
                 if (mediaPlayer != null)
-                    mediaPlayer.reset ();
+                    mediaPlayer.pause ();
+                mediaPlayer.seekTo ( 0 );
 
             }
         }
@@ -178,8 +118,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     @Override
     public void onDestroy ( ) {
         super.onDestroy ();
-        Log.e ( "Destroy", " I m service destroy" );
-        unregisterReceiver ( broadcastReceiver );
         isStarted = false;
         if (mediaPlayer != null)
             mediaPlayer.release ();
@@ -208,7 +146,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         String channelName = "Background Service";
         NotificationChannel chan = new NotificationChannel ( NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE );
         chan.setLightColor ( Color.BLUE );
-        chan.setLockscreenVisibility ( Notification.VISIBILITY_PRIVATE );
+        chan.setLockscreenVisibility ( Notification.VISIBILITY_PRIVATE );  /**
+         * Notification visibility: Show this notification on all lockscreens, but conceal sensitive or
+         * private information on secure lockscreens.
+         *
+         * {@see #visibility}
+         */
 
         NotificationManager manager = (NotificationManager) getSystemService ( Context.NOTIFICATION_SERVICE );
         assert manager != null;

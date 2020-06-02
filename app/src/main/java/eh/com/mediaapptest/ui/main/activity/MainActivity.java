@@ -2,6 +2,7 @@ package eh.com.mediaapptest.ui.main.activity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public static Music selectedSong;
     MainViewModel viewModel;
     private boolean notiIsPlay = false;
+    private boolean isResume = false;
 
 
     @Override
@@ -76,6 +78,9 @@ public class MainActivity extends AppCompatActivity implements Playable {
                             Utils.createNotification ( MainActivity.this, song, true );
                         } else {
 
+                            NotificationManager manager = getSystemService ( NotificationManager.class );
+                            manager.cancelAll (); // clear notification also
+                            isResume = false;
                             resetPlayer ();
                         }
 
@@ -102,7 +107,8 @@ public class MainActivity extends AppCompatActivity implements Playable {
     private void resetPlayer ( ) {
         isPlaying = false;
         iv_play.setImageResource ( R.drawable.ic_play_circle_outline_black_24dp );
-        viewModel.onStopService ( getApplicationContext () );
+        viewModel.onStopMusic ( getApplicationContext () );
+        //viewModel.onStopService ( getApplicationContext () );
     }
 
     private void changeSelectedSong (int index) {
@@ -137,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
                 String path = bundle.getString ( "path" );
                 notiIsPlay = bundle.getBoolean ( MediaAppConstants.ISNOTIPLAY );
                 if (path != null) {
+                    isResume = true;
                     findMusicbyPath ( path );
 
                 }
@@ -171,10 +178,16 @@ public class MainActivity extends AppCompatActivity implements Playable {
                     if (!path.equalsIgnoreCase ( "" )) {
                         iv_play.setImageResource ( R.drawable.ic_pause_circle_outline_black_24dp );
                         isPlaying = true;
-
                         Utils.createNotification ( MainActivity.this, selectedSong, true );
+                        if (!isResume) // if it is not resume
+                        {
+                            viewModel.onPlayMusic ( getApplicationContext (), tvTitle.getText ().toString (), tvArtist.getText ().toString (), path );
+                            isResume = true;
 
-                        viewModel.onPlayMusic ( getApplicationContext (), tvTitle.getText ().toString (), tvArtist.getText ().toString (), path );
+                        } else {
+
+                            viewModel.onResumeMusic ( getApplicationContext () );
+                        }
 
                     }
                 } else {
@@ -198,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
                 viewModel.onStopMusic ( MainActivity.this );
                 Utils.createNotification ( MainActivity.this, selectedSong, false ); // show pause button
                 resetPlayButton ();
+                isResume = false;
 
 
             }
@@ -318,6 +332,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
     public void onResumed ( ) {
 
 
+        isResume = true;
         viewModel.onResumeMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, true );
         resetPauseButton ();
@@ -340,6 +355,7 @@ public class MainActivity extends AppCompatActivity implements Playable {
 
         viewModel.onStopMusic ( MainActivity.this );
         Utils.createNotification ( MainActivity.this, selectedSong, false );
+        isResume = false;
         resetPlayButton ();
     }
 

@@ -8,7 +8,7 @@ public class Constants {
     public static final String ACTION_PAUSE = "eh.com.musicsdk.action.PAUSE";
     public static final String ACTION_RESUME = "eh.com.musicsdk.action.RESUME";
     public static final String ACTION_STOP = "eh.com.musicsdk.action.STOP";
-    public static final String ACTION_FORGROUND = "eh.com.musicsdk.action.FOREGROUND";
+
 
     public static final String ACTION_RESTART = "eh.com.musicsdk.action.RESTART";
 
