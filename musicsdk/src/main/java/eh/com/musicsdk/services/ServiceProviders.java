@@ -53,7 +53,6 @@ public class ServiceProviders {
         bundle.putString ( Constants.TITLE, title );
         bundle.putString ( Constants.ARTIST, artist );
         bundle.putString ( Constants.PATH, path );
-        bundle.putString ( Constants.ACTIONNAME, Constants.ACTION_RESTART );
         intent.putExtras ( bundle );
         intent.setAction ( Constants.ACTION_RESTART );
         context.startForegroundService ( intent );
